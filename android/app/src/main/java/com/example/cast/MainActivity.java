@@ -23,8 +23,16 @@ public class MainActivity extends FlutterActivity {
                 .setMethodCallHandler(
                         (call, result) -> {
                             if (call.method.equals("scan_device")) {
+                                ///TODO
+                            } else if (call.method.equals("get_list_device")) {
                                 List<Map<String, String>> devices = getDevices();
                                 result.success(devices);
+                            } else if (call.method.equals("connect_device")) {
+                                ///TODO
+                            } else if (call.method.equals("cast_image")) {
+                                ///TODO
+                            } else if (call.method.equals("cast_video")) {
+                                ///TODO
                             } else {
                                 result.notImplemented();
                             }
