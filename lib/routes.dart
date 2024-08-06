@@ -1,4 +1,7 @@
+import 'package:cast/presentation/screens/gallery/bloc/gallery_bloc.dart';
+import 'package:cast/presentation/screens/gallery/gallery_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'presentation/screens/screens.dart';
 
@@ -6,6 +9,7 @@ enum Routes {
   splash,
   intro,
   home,
+  gallery,
 }
 
 extension GetRouteName on Routes {
@@ -16,11 +20,13 @@ class _Paths {
   static const String splash = '/';
   static const String intro = '/intro';
   static const String home = '/home';
+  static const String gallery = '/gallery';
 
   static const Map<Routes, String> _pathMap = {
     Routes.splash: _Paths.splash,
     Routes.intro: _Paths.intro,
     Routes.home: _Paths.home,
+    Routes.gallery: _Paths.gallery,
   };
 
   static String of(Routes route) => _pathMap[route]!;
@@ -37,6 +43,13 @@ class AppNavigator {
         return MaterialPageRoute(builder: (_) => const SplashScreen());
       case _Paths.home:
         return MaterialPageRoute(builder: (_) => const NavScreen());
+      case _Paths.gallery:
+        return MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (context) => GalleryBloc(),
+            child: const GalleryScreen(),
+          ),
+        );
       default:
         throw Exception('Invalid route: ${settings.name}');
     }

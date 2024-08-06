@@ -1,9 +1,9 @@
 import 'dart:async';
 
+import 'package:cast/routes.dart';
 import 'package:flutter/material.dart';
 
 import '../../../configs/assets.dart';
-import '../home/home_screen.dart';
 import 'widgets/bottom_navigation.dart';
 
 class NavScreen extends StatefulWidget {
@@ -27,8 +27,20 @@ class _NavScreenState extends State<NavScreen> {
       const Center(
         child: Text('Connect TV'),
       ),
-      const Center(
-        child: Text('Cast Image, Audio'),
+      Center(
+        child: InkWell(
+          onTap: () {
+            AppNavigator.push(Routes.gallery);
+          },
+          child: Container(
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+                color: Colors.cyan, borderRadius: BorderRadius.circular(24)),
+            width: 200,
+            height: 50,
+            child: const Text('Cast Image, Audio'),
+          ),
+        ),
       ),
     ];
   }
