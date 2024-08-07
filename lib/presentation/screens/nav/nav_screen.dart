@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cast/presentation/screens/home/home_screen.dart';
 import 'package:cast/routes.dart';
 import 'package:flutter/material.dart';
 
@@ -24,9 +25,7 @@ class _NavScreenState extends State<NavScreen> {
     _pageController = PageController();
     _indexController = StreamController<int>();
     _pages = [
-      const Center(
-        child: Text('Connect TV'),
-      ),
+      const HomeScreen(),
       Center(
         child: InkWell(
           onTap: () {
@@ -35,7 +34,9 @@ class _NavScreenState extends State<NavScreen> {
           child: Container(
             alignment: Alignment.center,
             decoration: BoxDecoration(
-                color: Colors.cyan, borderRadius: BorderRadius.circular(24)),
+              color: Colors.cyan,
+              borderRadius: BorderRadius.circular(24),
+            ),
             width: 200,
             height: 50,
             child: const Text('Cast Image, Audio'),

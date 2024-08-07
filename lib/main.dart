@@ -9,7 +9,7 @@ import 'di/locator.dart';
 import 'domain/usecases/auth/delete_token.dart';
 import 'domain/usecases/auth/get_authorized_user.dart';
 import 'presentation/blocs/auth/auth_bloc.dart';
-import 'presentation/blocs/cast/app_cubit.dart';
+import 'presentation/blocs/cast/cast_cubit.dart';
 import 'utils/logging.dart';
 
 Future<void> main() async {
@@ -30,7 +30,7 @@ Future<void> main() async {
           )..onStart(),
         ),
         BlocProvider(
-          create: (_) => CastCubit()..initial(),
+          create: (_) => CastCubit(),
           lazy: false,
         ),
       ],

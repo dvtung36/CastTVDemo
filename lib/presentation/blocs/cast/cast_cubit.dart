@@ -4,16 +4,16 @@ import 'package:flutter/services.dart';
 
 import '../../../core/bloc/base_cubit.dart';
 
-part 'app_state.dart';
+part 'cast_state.dart';
 
 class CastCubit extends BaseCubit<CastState> {
   CastCubit() : super(const CastState());
   static const platform = MethodChannel('unisoft_cast_tv');
 
-  Future<void> initial() async {
+  Future<void> fetchListDevice() async {
     try {
       final List<dynamic> devicesMap =
-          await platform.invokeMethod('scan_device');
+          await platform.invokeMethod('get_list_device');
 
       final List<Device> listDevices = devicesMap
           .map(
@@ -24,17 +24,18 @@ class CastCubit extends BaseCubit<CastState> {
           .toList();
 
       emit(
-        state.copyWith(statusConnect: FormzSubmissionStatus.success),
+        state.copyWith(
+          statusConnect: FormzSubmissionStatus.success,
+          listDevice: listDevices,
+        ),
       );
     } on PlatformException catch (_) {
       emit(
-        state.copyWith(statusConnect: FormzSubmissionStatus.failure),
+        state.copyWith(
+          statusConnect: FormzSubmissionStatus.failure,
+        ),
       );
     }
-  }
-
-  Future<void> scanDevice() async {
-    await platform.invokeMethod<int>('scan_device', 1);
   }
 }
 
