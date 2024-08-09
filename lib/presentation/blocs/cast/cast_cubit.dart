@@ -68,6 +68,29 @@ class CastCubit extends BaseCubit<CastState> {
       );
     }
   }
+
+  Future<void> castImage(String filePath) async {
+    emit(
+      state.copyWith(
+        statusConnectDevice: FormzSubmissionStatus.inProgress,
+      ),
+    );
+    try {
+      await platform.invokeMethod('cast_image', {'filePath': filePath});
+
+      emit(
+        state.copyWith(
+          statusConnectDevice: FormzSubmissionStatus.success,
+        ),
+      );
+    } on PlatformException catch (_) {
+      emit(
+        state.copyWith(
+          statusConnectDevice: FormzSubmissionStatus.failure,
+        ),
+      );
+    }
+  }
 }
 
 class Device {

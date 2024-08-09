@@ -4,7 +4,13 @@ package com.example.cast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.io.File;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,13 +20,17 @@ import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodChannel;
 
+import android.content.ContentResolver;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
 import static com.connectsdk.service.DeviceService.PairingType.PIN_CODE;
 
+import com.connectsdk.core.MediaInfo;
 import com.connectsdk.device.ConnectableDevice;
 import com.connectsdk.device.ConnectableDeviceListener;
 import com.connectsdk.device.DevicePicker;
@@ -38,6 +48,10 @@ public class MainActivity extends FlutterActivity {
     private static final String CHANNEL = "unisoft_cast_tv";
     private DiscoveryManager mDiscoveryManager;
     private ConnectableDevice mTV;
+
+    private MediaPlayer mediaPlayer;
+
+    private WebServer webServer;
 
     private ConnectableDeviceListener deviceListener = new ConnectableDeviceListener() {
 
@@ -111,7 +125,15 @@ public class MainActivity extends FlutterActivity {
                                     result.error("INVALID_ARGUMENT", "Value is null", null);
                                 }
                             } else if (call.method.equals("cast_image")) {
-                                ///TODO
+                                String filePath = call.argument("filePath");
+                                if (filePath != null) {
+                                    File file = new File(filePath);
+                                    startWebServer(file, "image");
+                                    result.success(null);
+                                } else {
+                                    result.error("INVALID_ARGUMENT", "Value is null", null);
+                                }
+
                             } else if (call.method.equals("cast_video")) {
                                 ///TODO
                             } else {
@@ -125,12 +147,125 @@ public class MainActivity extends FlutterActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         startDiscovery();
+        webServer = new WebServer();
+        webServer.startServer();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         stopDiscovery();
+    }
+
+    private void startWebServer(File file, String fileType) {
+        try {
+            String directoryPath = fileType.equals("image") ? "/storage/emulated/0/Pictures/" : "/storage/emulated/0/Video/";
+
+            if (webServer != null) {
+                webServer.SetImageFile(file);
+            }
+            String ipAddress = getLocalIpAddress();
+            Log.d("WebServer", "Server started at http://" + ipAddress + ":8080/");
+            Log.d("WebServer", "Serving files from directory: " + directoryPath);
+
+            if (fileType.equals("image")) {
+                showImage(file.getAbsolutePath());
+            } else if (fileType.equals("video")) {
+                //   playVideo(file.getAbsolutePath());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e("WebServer", "Error starting the server: " + e.getMessage());
+        }
+    }
+
+    private void showImage(String imagePath) {
+        Log.d("showImage", "Entering showImage method with imagePath: " + imagePath);
+        if (imagePath == null || imagePath.isEmpty()) {
+            Log.e("showImageError", "Invalid image path: " + imagePath);
+            return;
+        }
+        if (!isConnected()) {
+            Log.e("showImageError", "Connection lost. Stopping image display.");
+            return;
+        }
+        String ipAddress = getLocalIpAddress();
+
+        if (ipAddress == null) {
+            Log.e("showImageError", "Unable to get local IP address.");
+            return;
+        }
+        String localUrl = "http://" + ipAddress + ":8080/" + new File(imagePath).getName();
+
+
+        Uri uri = Uri.parse(imagePath);
+
+        ContentResolver contentResolver = this.getContentResolver();
+        String mimeType = contentResolver.getType(uri);
+        Log.d("playVideo", "MIME type: " + mimeType);
+        if (mimeType == null) {
+            String extension = MimeTypeMap.getFileExtensionFromUrl(imagePath);
+            if (extension != null) {
+                mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+            }
+
+                Log.d("mimeType===", "mimeType: " + mimeType);
+                Log.e("showImageError", "Unable to determine MIME type for image path: " + imagePath);
+
+        }
+        MediaInfo mediaInfo = new MediaInfo.Builder(localUrl, mimeType)
+                .setTitle("Selected Image")
+                .setDescription("Image from gallery")
+                .setIcon(localUrl)
+                .build();
+
+        Log.d("playVideo", "MIME type: " + mimeType);
+
+        if (mTV == null) {
+            return;
+        }
+
+        mediaPlayer = mTV.getCapability(MediaPlayer.class);
+
+        mediaPlayer.displayImage(mediaInfo, new MediaPlayer.LaunchListener() {
+
+            @Override
+            public void onError(ServiceCommandError error) {
+                Log.e("MediaPlayerError", "Error displaying Image: " + error.getMessage() +
+                        "\nError Code: " + error.getCode() +
+                        "\nImage Path: " + localUrl +
+                        "\nMIME Type: " + contentResolver.getType(uri));
+
+            }
+
+            @Override
+            public void onSuccess(MediaPlayer.MediaLaunchObject object) {
+                Log.e("MediaPlayerError", "Cast image success");
+            }
+        });
+
+    }
+
+
+    private boolean isConnected() {
+        return mTV != null && mTV.isConnected();
+    }
+
+    private String getLocalIpAddress() {
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
+                NetworkInterface intf = en.nextElement();
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
+                        return inetAddress.getHostAddress();
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     // Bắt đầu quét các thiết bị

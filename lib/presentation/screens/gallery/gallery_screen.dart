@@ -6,8 +6,10 @@ import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import '../../../routes.dart';
 import '../../../utils/extensions/responsive_ext.dart';
 import '../../../utils/extensions/scroll_controller_ext.dart';
+import '../../blocs/cast/cast_cubit.dart';
 import 'bloc/gallery_bloc.dart';
 import 'widgets/item_menu_widget.dart';
+import 'dart:io';
 
 class GalleryScreen extends StatefulWidget {
   const GalleryScreen({super.key});
@@ -19,12 +21,14 @@ class GalleryScreen extends StatefulWidget {
 class _GalleryScreenState extends State<GalleryScreen> {
   late final GalleryBloc _galleryBloc;
   late final ScrollController _scrollController;
+  late final CastCubit _castCubit;
   bool _showList = false;
 
   @override
   void initState() {
     super.initState();
     _galleryBloc = context.read<GalleryBloc>();
+    _castCubit = context.read<CastCubit>();
     _requestPermission();
 
     _scrollController = ScrollController();
@@ -53,15 +57,12 @@ class _GalleryScreenState extends State<GalleryScreen> {
   Future<void> _handleSelectAsset({
     required AssetEntity asset,
   }) async {
-    _navigatorDrawAction(asset: asset);
-    return;
-  }
+    final File? file = await asset.file;
 
-  void _navigatorDrawAction({
-    required AssetEntity asset,
-  }) async {
-    final file = await asset.file;
-    if (file == null) return;
+    if (file != null) {
+      String path = file.path;
+      _castCubit.castImage(path);
+    }
   }
 
   @override
