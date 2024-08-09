@@ -45,9 +45,10 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: BlocBuilder<CastCubit, CastState>(
                 buildWhen: (previous, current) =>
-                    previous.listDevice != current.listDevice,
+                    previous.listDevice != current.listDevice ||
+                    previous.statusFetchDevice != current.statusFetchDevice,
                 builder: (context, state) {
-                  if (!state.statusConnect.isFailure) {
+                  if (state.statusFetchDevice.isFailure) {
                     return const Center(
                       child: Text(
                         'Scan device failure',
@@ -55,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                   }
-                  if (!state.statusConnect.isSuccess) {
+                  if (!state.statusFetchDevice.isSuccess) {
                     return const Center(
                       child: Text(
                         'click scan device',
@@ -66,17 +67,35 @@ class _HomeScreenState extends State<HomeScreen> {
                   return ListView.builder(
                     itemBuilder: (BuildContext context, int index) {
                       final device = state.listDevice[index];
-                      return Row(
-                        children: [
-                          Text(
-                            '${device.id}: ',
-                            style: const TextStyle(color: Colors.black),
+                      return Padding(
+                        padding: const EdgeInsets.all(30),
+                        child: InkWell(
+                          onTap: () {
+                            _castCubit.connectDevice(device);
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: Colors.cyan,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'ID: ${device.id}: ',
+                                    style: const TextStyle(color: Colors.black),
+                                  ),
+                                  Text(
+                                    'name: ${device.name}',
+                                    style: const TextStyle(color: Colors.black),
+                                  )
+                                ],
+                              ),
+                            ),
                           ),
-                          Text(
-                            device.name,
-                            style: const TextStyle(color: Colors.black),
-                          )
-                        ],
+                        ),
                       );
                     },
                     itemCount: state.listDevice.length,

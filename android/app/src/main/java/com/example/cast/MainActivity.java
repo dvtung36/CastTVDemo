@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
@@ -98,11 +99,17 @@ public class MainActivity extends FlutterActivity {
         new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL)
                 .setMethodCallHandler(
                         (call, result) -> {
-                             if (call.method.equals("get_list_device")) {
+                            if (call.method.equals("get_list_device")) {
                                 List<Map<String, String>> devices = getDevices();
                                 result.success(devices);
                             } else if (call.method.equals("connect_device")) {
-                                ///TODO
+                                String id = call.argument("id");
+                                if (id != null) {
+                                    connectToDevice(id);
+                                    result.success(null);
+                                } else {
+                                    result.error("INVALID_ARGUMENT", "Value is null", null);
+                                }
                             } else if (call.method.equals("cast_image")) {
                                 ///TODO
                             } else if (call.method.equals("cast_video")) {
@@ -128,25 +135,30 @@ public class MainActivity extends FlutterActivity {
 
     // Bắt đầu quét các thiết bị
     public void startDiscovery() {
+        Log.d("2ndScreenAPP", "TungDV startDiscovery");
         DiscoveryManager.init(getApplicationContext());
         mDiscoveryManager = DiscoveryManager.getInstance();
         mDiscoveryManager.registerDefaultDeviceTypes();
         mDiscoveryManager.setPairingLevel(PairingLevel.ON);
-        DiscoveryManager.getInstance().start();
+        mDiscoveryManager.start();
     }
 
     // Dừng quét các thiết bị
     public void stopDiscovery() {
-        DiscoveryManager.getInstance().stop();
+        mDiscoveryManager.stop();
     }
 
     // Kết nối với thiết bị đã chọn
-    public void connectToDevice(ConnectableDevice device) {
-        if (device != null) {
-            mTV = device;
-            mTV.addListener(deviceListener);
-            mTV.setPairingType(PIN_CODE);
-            mTV.connect();
+    public void connectToDevice(String id) {
+        for (ConnectableDevice device : mDiscoveryManager.getCompatibleDevices().values()) {
+            if (Objects.equals(device.getId(), id)) {
+
+                Log.d("2ndScreenAPP", " TungDV Start connect Device " + device.getFriendlyName());
+                mTV = device;
+                mTV.addListener(deviceListener);
+                mTV.setPairingType(PIN_CODE);
+                mTV.connect();
+            }
         }
     }
 
@@ -201,7 +213,7 @@ public class MainActivity extends FlutterActivity {
     public List<ConnectableDevice> getImageDevices() {
         List<ConnectableDevice> imageDevices = new ArrayList<ConnectableDevice>();
 
-        for (ConnectableDevice device : DiscoveryManager.getInstance().getCompatibleDevices().values()) {
+        for (ConnectableDevice device : mDiscoveryManager.getCompatibleDevices().values()) {
             if (device.hasCapability(MediaPlayer.Display_Image))
                 imageDevices.add(device);
         }
@@ -210,16 +222,19 @@ public class MainActivity extends FlutterActivity {
     }
 
     private List<Map<String, String>> getDevices() {
+
+        Log.d("2ndScreenAPP", "TungDV getDevices  start");
         List<Map<String, String>> devices = new ArrayList<>();
 
-        for (ConnectableDevice device : DiscoveryManager.getInstance().getCompatibleDevices().values()) {
+        for (ConnectableDevice device : mDiscoveryManager.getCompatibleDevices().values()) {
             if (device.hasCapability(MediaPlayer.Display_Image)) {
                 Map<String, String> deviceMap = new HashMap<>();
-                deviceMap.put("name", device.getModelName());
+                deviceMap.put("name", device.getFriendlyName());
                 deviceMap.put("id", device.getId());
                 devices.add(deviceMap);
             }
         }
+
         return devices;
     }
 

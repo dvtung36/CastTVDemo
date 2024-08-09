@@ -11,6 +11,11 @@ class CastCubit extends BaseCubit<CastState> {
   static const platform = MethodChannel('unisoft_cast_tv');
 
   Future<void> fetchListDevice() async {
+    emit(
+      state.copyWith(
+        statusFetchDevice: FormzSubmissionStatus.inProgress,
+      ),
+    );
     try {
       final List<dynamic> devicesMap =
           await platform.invokeMethod('get_list_device');
@@ -23,16 +28,42 @@ class CastCubit extends BaseCubit<CastState> {
           )
           .toList();
 
+      print(
+          '2ndScreenAPP TungDV okokooo 8888 listDevices = ${listDevices.length}');
+
       emit(
         state.copyWith(
-          statusConnect: FormzSubmissionStatus.success,
+          statusFetchDevice: FormzSubmissionStatus.success,
           listDevice: listDevices,
         ),
       );
     } on PlatformException catch (_) {
       emit(
         state.copyWith(
-          statusConnect: FormzSubmissionStatus.failure,
+          statusFetchDevice: FormzSubmissionStatus.failure,
+        ),
+      );
+    }
+  }
+
+  Future<void> connectDevice(Device device) async {
+    emit(
+      state.copyWith(
+        statusConnectDevice: FormzSubmissionStatus.inProgress,
+      ),
+    );
+    try {
+      await platform.invokeMethod('connect_device', {'id': device.id});
+
+      emit(
+        state.copyWith(
+          statusConnectDevice: FormzSubmissionStatus.success,
+        ),
+      );
+    } on PlatformException catch (_) {
+      emit(
+        state.copyWith(
+          statusConnectDevice: FormzSubmissionStatus.failure,
         ),
       );
     }

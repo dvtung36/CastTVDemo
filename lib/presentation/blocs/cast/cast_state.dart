@@ -2,26 +2,31 @@ part of 'cast_cubit.dart';
 
 class CastState extends Equatable {
   const CastState({
-    this.statusConnect = FormzSubmissionStatus.initial,
+    this.statusFetchDevice = FormzSubmissionStatus.initial,
+    this.statusConnectDevice = FormzSubmissionStatus.initial,
     this.listDevice = const [],
   });
 
-  final FormzSubmissionStatus statusConnect;
+  final FormzSubmissionStatus statusFetchDevice;
+  final FormzSubmissionStatus statusConnectDevice;
   final List<Device> listDevice;
 
   CastState copyWith({
-    FormzSubmissionStatus? statusConnect,
+    FormzSubmissionStatus? statusFetchDevice,
+    FormzSubmissionStatus? statusConnectDevice,
     List<Device>? listDevice,
   }) {
     return CastState(
-      statusConnect: statusConnect ?? this.statusConnect,
+      statusFetchDevice: statusFetchDevice ?? this.statusFetchDevice,
       listDevice: listDevice ?? this.listDevice,
+      statusConnectDevice: statusConnectDevice ?? this.statusConnectDevice,
     );
   }
 
   @override
   List<Object> get props => [
-        statusConnect,
+        statusFetchDevice,
         listDevice,
+        statusConnectDevice,
       ];
 }
